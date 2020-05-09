@@ -1,4 +1,4 @@
-module tgmsg_bot
+module github.com/miiniper/tgmsg_bot
 
 go 1.14
 

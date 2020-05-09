@@ -1,4 +1,4 @@
-package main
+package tgmsg_bot
 
 import (
 	"os"
@@ -8,18 +8,21 @@ import (
 	"go.uber.org/zap"
 )
 
-func main() {
+var chatId int64 = 911000205
+
+func SendMsg(text string) error {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("BotToken"))
 	if err != nil {
 		loges.Loges.Error("get token error:", zap.Error(err))
 	}
 
-	text := "test=test1=test2"
-	msg := tgbotapi.NewMessage(911000205, text)
+	msg := tgbotapi.NewMessage(chatId, text)
 
-	for i := 0; i <= 30; i++ {
-		if i > 25 {
-			bot.Send(msg)
-		}
+	_, err = bot.Send(msg)
+	if err != nil {
+		loges.Loges.Error("send msg error:", zap.Error(err))
+		return err
 	}
+	return nil
+
 }
