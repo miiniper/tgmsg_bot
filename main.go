@@ -1,34 +1,48 @@
-package tgmsg_bot
+package main
 
 import (
+	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/miiniper/loges"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/miiniper/tgmsg_bot/httpd"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-var chatId int64 = 911000205
-type Bot struct {
-	Name string `json:"name"`
-	BotApi *tgbotapi.BotAPI `json:"botapi"`
-}
+func main() {
+	fmt.Println("Server starting ...")
 
-func (b Bot) SendMsg(text string) error {
-	msg := tgbotapi.NewMessage(chatId, text)
-
-	_, err := b.BotApi.Send(msg)
+	viper.SetConfigName("conf")
+	viper.SetConfigType("toml")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
 	if err != nil {
-		loges.Loges.Error("send msg error:", zap.Error(err))
-		return err
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
-	return nil
 
-}
-func NewBot(name string) Bot {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("BotToken"))
+	viper.WatchConfig()
+
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		//fmt.Printf("Config file changed: %s", e.Name)
+		loges.Loges.Info("Config file changed: ", zap.Any("", e.Name))
+	})
+
+	service, err := httpd.New(viper.GetString("server.hostport"))
 	if err != nil {
-		loges.Loges.Error("get token error:", zap.Error(err))
+		panic(err)
 	}
-	return Bot{BotApi: bot,Name: name}
+	err = service.Start()
+	if err != nil {
+		panic(err)
+	}
+	defer service.Close()
+
+	terminate := make(chan os.Signal, 1)
+	signal.Notify(terminate, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGKILL)
+	<-terminate
 }
