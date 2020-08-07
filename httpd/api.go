@@ -13,8 +13,10 @@ import (
 	"go.uber.org/zap"
 )
 
+//test chat id
 var chatId int64 = 911000205
 
+// to do
 type BotMsg struct {
 	//	Topic string `json:"topic"`
 	//	User  string `json:"user"`
@@ -26,6 +28,12 @@ type Bot struct {
 	Name   string           `json:"name"`
 	BotApi *tgbotapi.BotAPI `json:"botapi"`
 }
+
+//func InitBot() {
+//	TgBot := NewBot("tgmsg")
+//	fmt.Printf("bot %s created \n", TgBot.Name)
+//	loges.Loges.Info("bot created ", zap.Any("botName", TgBot.Name))
+//}
 
 //func (b Bot) BotSendMsg(text string) error {
 //	msg := tgbotapi.NewMessage(chatId, text)
@@ -47,12 +55,6 @@ func NewBot(name string) (Bot, error) {
 	}
 	return Bot{BotApi: bot, Name: name}, nil
 }
-
-//func InitBot() {
-//	TgBot := NewBot("tgmsg")
-//	fmt.Printf("bot %s created \n", TgBot.Name)
-//	loges.Loges.Info("bot created ", zap.Any("botName", TgBot.Name))
-//}
 
 func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
