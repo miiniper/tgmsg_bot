@@ -7,6 +7,5 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/miiniper/loges v0.0.0-20200514030821-7ee50219ef6b
 	github.com/spf13/viper v1.7.1
-	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	go.uber.org/zap v1.15.0
 )

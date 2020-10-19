@@ -61,7 +61,9 @@ func (s *Service) Close() error {
 
 func (s *Service) initHandler() {
 	s.router.GET("/httpcheck", s.GetOk)
-	s.router.POST("/sendmsg", SendMsg)
+	s.router.POST("/sendMsg", SendMsg)
+	s.router.GET("/updateChatId", updateChatId)
+	s.router.GET("/getChatId", GetChatId)
 
 }
 

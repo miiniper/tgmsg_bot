@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/miiniper/tgmsg_bot/bot"
 
@@ -14,21 +15,21 @@ import (
 	"go.uber.org/zap"
 )
 
-//test chat id
-var chatId string = "911000205"
-
 // to do
 type BotMsg struct {
-	//	Topic string `json:"topic"`
-	//	User  string `json:"user"`
+	User string `json:"user"`
 	Text string `json:"text"`
 	//	Token string `json:"token"`
 }
 
+var TgBot bot.BotApi
+
+func init() {
+	TgBot.Token = os.Getenv("BotToken")
+	TgBot.Name = "tgmsg"
+	TgBot.UpDateChatId()
+}
 func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	tgBot, _ := bot.NewBotApi(os.Getenv("BotToken"), "tgmsg")
-
 	var bb BotMsg
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -44,13 +45,32 @@ func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.Write([]byte("send error : json error "))
 		return
 	}
-
-	err = tgBot.SendMsg(chatId, bb.Text)
+	chatId := bot.GetChatId(bb.User)
+	chat := strconv.Itoa(chatId)
+	err = TgBot.SendMsg(chat, bb.Text)
 	if err != nil {
 		loges.Loges.Error("send msg error:", zap.Error(err))
-		w.Write([]byte("send error : msg error "))
+		w.Write([]byte("send error "))
 		return
 	}
 
 	w.Write([]byte("ok"))
+}
+
+func updateChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	TgBot.UpDateChatId()
+	bot.ShowChat()
+	w.Write([]byte("ok"))
+}
+func GetChatId(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	user := r.FormValue("user")
+	ChatId := bot.GetChatId(user)
+	var mm = map[int]string{ChatId: user}
+	bb, err := json.Marshal(mm)
+	if err != nil {
+		loges.Loges.Error("json error:", zap.Error(err))
+		w.Write([]byte("json error "))
+		return
+	}
+	w.Write(bb)
 }
