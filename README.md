@@ -1,6 +1,6 @@
 # tgmsg_bot
 
-** This is a message gateway with telegram bot. Only text now  **
+**This is a message gateway with telegram bot. Only text now**
 
 [telegramBot API](https://core.telegram.org/bots/api)
 
