@@ -2,10 +2,12 @@ package httpd
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/miiniper/tgmsg_bot/bot"
 
@@ -19,6 +21,7 @@ import (
 type BotMsg struct {
 	User string `json:"user"`
 	Text string `json:"text"`
+	File string `json:"file"`
 	//	Token string `json:"token"`
 }
 
@@ -62,7 +65,7 @@ func updateChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	bot.ShowChat()
 	w.Write([]byte("ok"))
 }
-func GetChatId(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func GetChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	user := r.FormValue("user")
 	ChatId := bot.GetChatId(user)
 	var mm = map[int]string{ChatId: user}
@@ -73,4 +76,53 @@ func GetChatId(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 	w.Write(bb)
+}
+
+type FileMeta struct {
+	FileSha1 string `json:"file_sha_1"`
+	FileName string `json:"file_name"`
+	FileSize int64  `json:"file_size"`
+	Location string `json:"location"`
+	UploadAt string `json:"upload_at"`
+}
+
+func UploadFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	file, head, err := r.FormFile("uploadfile")
+	if err != nil {
+		loges.Loges.Error("get upload file error :", zap.Error(err))
+	}
+	defer file.Close()
+	fileMeta := FileMeta{
+		FileName: head.Filename,
+		Location: "/tmp/" + head.Filename,
+		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	newFile, err := os.Create(fileMeta.Location)
+	if err != nil {
+		loges.Loges.Error("create new file error :", zap.Error(err))
+		w.Write([]byte("error"))
+		return
+	}
+	defer newFile.Close()
+
+	fileMeta.FileSize, err = io.Copy(newFile, file)
+	if err != nil {
+		loges.Loges.Error("copy file error :", zap.Error(err))
+		w.Write([]byte("error"))
+		return
+	}
+	newFile.Seek(0, 0)
+
+	w.Write([]byte("ok"))
+}
+
+func SendFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	file, head, err := r.FormFile("uploadfile")
+	if err != nil {
+		loges.Loges.Error("get upload file error :", zap.Error(err))
+	}
+	defer file.Close()
+	fileName := head.Filename
+
+	w.Write([]byte("ok"))
 }
