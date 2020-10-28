@@ -1,12 +1,16 @@
 package bot
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	url2 "net/url"
+	"os"
 	"strings"
 
 	"go.uber.org/zap"
@@ -143,4 +147,68 @@ func GetChatId(userName string) int {
 		}
 	}
 	return -1
+}
+
+func (bot *BotApi) SendPhoto(chatId, filename string) error {
+	url := fmt.Sprintf(TelegramBotApi, bot.Token, "sendPhoto") + "chat_id=" + chatId
+
+	err := PostFile("photo", filename, url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (bot *BotApi) SendFile(chatId, filename string) error {
+	url := fmt.Sprintf(TelegramBotApi, bot.Token, "sendDocument") + "chat_id=" + chatId
+
+	err := PostFile("document", filename, url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func PostFile(mod, filename string, targetUrl string) error {
+	bodyBuf := new(bytes.Buffer)
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	fileWriter, err := bodyWriter.CreateFormFile(mod, filename)
+	if err != nil {
+		loges.Loges.Error("error writing to buffer :", zap.Error(err))
+		return err
+	}
+
+	fh, err := os.Open(filename)
+	if err != nil {
+		loges.Loges.Error("open upload file error :", zap.Error(err))
+		return err
+	}
+	defer fh.Close()
+
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		loges.Loges.Error("copy upload file error :", zap.Error(err))
+		return err
+	}
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	if err != nil {
+		loges.Loges.Error("post file error :", zap.Error(err))
+		return err
+	}
+	defer resp.Body.Close()
+
+	resp_body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		loges.Loges.Error("read resp body error :", zap.Error(err))
+		return err
+	}
+
+	loges.Loges.Info("", zap.Any("resp.Status", resp.Status))
+	loges.Loges.Info("", zap.Any("resp_body", string(resp_body)))
+	return nil
 }

@@ -25,6 +25,21 @@
 
 `curl -XGET http://127.0.0.1:9999/getChatId?user=miiniper`
 
+- 5 uploadFile
+
+`use POST multipart/form-data ，body key is "uploadfile" value is file`
+
+- 6 sendPhoto
+
+upload photo before send photo
+
+`use POST multipart/form-data ，body key is "uploadfile" value is file`
+
+- 7 sendFile
+
+upload file before send file
+
+`use POST multipart/form-data ，body key is "uploadfile" value is file`
 
 
 

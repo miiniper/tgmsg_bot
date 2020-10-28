@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/miiniper/tgmsg_bot/bot"
 
 	"github.com/julienschmidt/httprouter"
@@ -63,6 +65,7 @@ func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func updateChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	TgBot.UpDateChatId()
 	bot.ShowChat()
+
 	w.Write([]byte("ok"))
 }
 func GetChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -94,7 +97,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	defer file.Close()
 	fileMeta := FileMeta{
 		FileName: head.Filename,
-		Location: "/tmp/" + head.Filename,
+		Location: viper.GetString("data.tmpdir") + head.Filename,
 		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 	newFile, err := os.Create(fileMeta.Location)
@@ -116,13 +119,38 @@ func UploadFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Write([]byte("ok"))
 }
 
-func SendFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	file, head, err := r.FormFile("uploadfile")
+func SendPhoto(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	_, head, err := r.FormFile("uploadfile")
 	if err != nil {
 		loges.Loges.Error("get upload file error :", zap.Error(err))
 	}
-	defer file.Close()
-	fileName := head.Filename
+
+	fileName := viper.GetString("data.tmpdir") + head.Filename
+	chatId := r.FormValue("chat_id")
+	err = TgBot.SendPhoto(chatId, fileName)
+	if err != nil {
+		loges.Loges.Error("send upload file error :", zap.Error(err))
+		w.Write([]byte("err"))
+		return
+	}
+
+	w.Write([]byte("ok"))
+}
+
+func SendFile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	_, head, err := r.FormFile("uploadfile")
+	if err != nil {
+		loges.Loges.Error("get upload file error :", zap.Error(err))
+	}
+
+	fileName := viper.GetString("data.tmpdir") + head.Filename
+	chatId := r.FormValue("chat_id")
+	err = TgBot.SendFile(chatId, fileName)
+	if err != nil {
+		loges.Loges.Error("send upload file error :", zap.Error(err))
+		w.Write([]byte("err"))
+		return
+	}
 
 	w.Write([]byte("ok"))
 }

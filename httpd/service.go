@@ -62,6 +62,7 @@ func (s *Service) Close() error {
 func (s *Service) initHandler() {
 	s.router.GET("/httpcheck", s.GetOk)
 	s.router.POST("/sendMsg", SendMsg)
+	s.router.POST("/sendPhoto", SendPhoto)
 	s.router.POST("/sendFile", SendFile)
 	s.router.POST("/uploadFile", UploadFile)
 	s.router.GET("/updateChatId", updateChatId)

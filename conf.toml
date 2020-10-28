@@ -1,2 +1,5 @@
 [server]
 hostport = ":9999"
+
+[data]
+tmpdir="/tmp/"
