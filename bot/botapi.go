@@ -47,9 +47,11 @@ func (bot *BotApi) BotRequst(mod string, params url2.Values) (*http.Response, er
 		loges.Loges.Error("new http resp error: ", zap.Error(err))
 		return &http.Response{}, err
 	}
+	//	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		loges.Loges.Error("telegram api status code  not 200", zap.Int("statusCode", resp.StatusCode))
+		body, err := ioutil.ReadAll(resp.Body)
+		loges.Loges.Error("telegram api status code  not 200", zap.String("body ", string(body)))
 		err = errors.New("statusCode is not 200")
 		return &http.Response{}, err
 	}
@@ -108,7 +110,7 @@ func (bot *BotApi) GetUpdates() ([]Result, error) {
 	var ss HttpResult
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		loges.Loges.Error("json resp body error: ", zap.Error(err))
+		loges.Loges.Error("json resp body error: ", zap.Error(err), zap.String("body", string(body)))
 		return nil, err
 	}
 	err = json.Unmarshal(body, &ss)
@@ -123,8 +125,12 @@ func (bot *BotApi) GetUpdates() ([]Result, error) {
 var ChatId = make(map[int]string)
 
 //update chat
-func (bot *BotApi) UpDateChatId() {
-	result, _ := bot.GetUpdates()
+func (bot *BotApi) UpDateChatId() error {
+	result, err := bot.GetUpdates()
+	if err != nil {
+		loges.Loges.Error("get update chatId error", zap.Error(err))
+		return err
+	}
 	for _, j := range result {
 		if _, ok := ChatId[j.Message.Chat.ID]; ok {
 			loges.Loges.Info("chatId existed", zap.Int("chatId", j.Message.Chat.ID), zap.Any("username", j.Message.From.FirstName))
@@ -133,6 +139,7 @@ func (bot *BotApi) UpDateChatId() {
 			loges.Loges.Info("update chatId successful", zap.Int("chatId", j.Message.Chat.ID), zap.String("username", j.Message.From.FirstName))
 		}
 	}
+	return nil
 }
 
 func ShowChat() {

@@ -43,7 +43,11 @@ upload file before send file
 
 
 
-
+## 使用说明
+1. 首先start bot或者发消息给bot
+2. getChatId 更新用户ID
+3. 可以使用发消息
+4. 每次有新用户都需要更新getChatId
 
 ## to do 
 项目待完成

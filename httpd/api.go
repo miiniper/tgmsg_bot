@@ -40,7 +40,7 @@ func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		loges.Loges.Error("json err :", zap.Error(err))
-		w.Write([]byte("send error : json0 error "))
+		w.Write([]byte("send error : json error "))
 		return
 	}
 
@@ -51,7 +51,13 @@ func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 	chatId := bot.GetChatId(bb.User)
+	if chatId < 0 {
+		loges.Loges.Error("chat is not found", zap.Int("chatId", chatId))
+		w.Write([]byte("chat is not found "))
+		return
+	}
 	chat := strconv.Itoa(chatId)
+
 	err = TgBot.SendMsg(chat, bb.Text)
 	if err != nil {
 		loges.Loges.Error("send msg error:", zap.Error(err))
@@ -63,9 +69,12 @@ func SendMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func updateChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	TgBot.UpDateChatId()
+	err := TgBot.UpDateChatId()
+	if err != nil {
+		w.Write([]byte("get chatId error"))
+		return
+	}
 	bot.ShowChat()
-
 	w.Write([]byte("ok"))
 }
 func GetChatId(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
