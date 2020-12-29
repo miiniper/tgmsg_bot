@@ -32,6 +32,7 @@ func main() {
 		loges.Loges.Info("Config file changed: ", zap.Any("", e.Name))
 	})
 
+	go httpd.Hello()
 	service, err := httpd.New(viper.GetString("server.hostport"))
 	if err != nil {
 		panic(err)
